@@ -1,9 +1,17 @@
-from aiogram.filters import CommandStart, Command
+import asyncio
+from aiogram.filters import CommandObject, CommandStart, Command
 from aiogram.types import CallbackQuery, Message
 from aiogram import F, Dispatcher, Router
+from aiogram.utils.chat_action import ChatActionSender
 import app.keyboards as kb
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
+from app.questions import questions
+from filters.is_admin import IsAdmin
+from config import bot, admins
+# from main import admins as ADMINS
+
+
 
 
 handlers_router = Router()
@@ -15,17 +23,17 @@ class Reg(StatesGroup):
 
 
 
-@handlers_router.message(CommandStart())
+@handlers_router.message(F.text.upper().contains('ПРИВ'))
 async def cmd_start(message: Message):
-    await message.reply(f"Hello, your ID: {message.from_user.id},\nfirst_name: {message.from_user.first_name}",
-                        reply_markup=kb.main_01)
+    await message.reply(f"Привет, {message.from_user.first_name}  ID: {message.from_user.id}",
+                        reply_markup=kb.main)
 
 
-@handlers_router.message(Command('help'))
+@handlers_router.message(Command(commands=['help', 'problem']))
 async def get_help(message: Message):
     await message.answer('Чем могу помочь ?')
 
-@handlers_router.message(F.text == 'как дела?')
+@handlers_router.message(F.text.upper().contains('КАК ДЕЛА?') )
 async def how_are_you(message: Message):
     await message.answer('Блястяще')
 
@@ -42,6 +50,10 @@ async def get_photo(message: Message):
 @handlers_router.message(F.text == 'Корзина')
 async def how_are_you(message: Message):
     await message.answer('Вот корзинка')
+
+@handlers_router.message(F.text == 'О нас')
+async def how_are_you(message: Message):
+    await message.reply("Мы есть на:", reply_markup=kb.ease_link_kb())
 
 
 @handlers_router.callback_query(F.data == 'catalog')
@@ -70,5 +82,77 @@ async def two_three(message: Message, state: FSMContext):
     await state.clear()
 
 
+@handlers_router.message(F.text == 'Давай инлайн')
+async def get_inline_link(message: Message):
+    await message.answer('Вот инлайн', reply_markup=kb.get_inline_kb())
+
+# @handlers_router.callback_query(F.data == 'back_home')
+# async def get_inline_link(call: CallbackQuery):
+#     # await call.answer()
+#     await call.answer('Вот главная')
+#     await call.message.answer(reply_markup=)
 
 
+@handlers_router.callback_query(F.data == 'get_person')
+async def send_random_person(call: CallbackQuery):
+    await call.answer('Генерирую случайного пользователя')
+    user = kb.get_random_person()
+    formatted_message = (
+        f"👤 <b>Имя:</b> {user['name']}\n"
+        f"🏠 <b>Адрес:</b> {user['address']}\n"
+        f"📧 <b>Email:</b> {user['email']}\n"
+        f"📞 <b>Телефон:</b> {user['phone_number']}\n"
+        f"🎂 <b>Дата рождения:</b> {user['birth_date']}\n"
+        f"🏢 <b>Компания:</b> {user['company']}\n"
+        f"💼 <b>Должность:</b> {user['job']}\n"
+    )
+    await call.message.answer(formatted_message)
+
+
+@handlers_router.callback_query(F.data == 'back_home')
+async def back_home(call: CallbackQuery):
+    await call.message.answer(text='вот', reply_markup=kb.main, )
+    await call.answer()
+
+
+@handlers_router.message(Command('faq'))
+async def cmd_start_2(message: Message):
+    await message.answer('Сообщение с инлайн клавиатуры,', reply_markup=kb.create_qst_inline_kb(questions))
+
+
+@handlers_router.callback_query(F.data.startswith("qst_"))
+async def cmd_start(call: CallbackQuery):
+    await call.answer()
+    qst_id = int(call.data.replace('qst_', ''))
+    qst_data = questions[qst_id]
+    msg_text = f'Ответ на вопрос {qst_data.get("qst")}\n\n' \
+               f'<b>{qst_data.get("answer")}</b>\n\n' \
+               f'Выбери другой вопрос:'
+    async with ChatActionSender(bot=bot, chat_id=call.from_user.id, action="typing"):
+        await asyncio.sleep(2)
+        await call.message.answer(msg_text, reply_markup=kb.create_qst_inline_kb(questions))
+
+
+
+@handlers_router.message(Command(commands=["settings", "about"]))
+async def univers_cmd_handler(message: Message, command: CommandObject):
+    command_args: str = command.args
+    command_name = 'settings' if 'settings' in message.text else 'about'
+    response = f'Была вызвана команда /{command_name}'
+    if command_args:
+        response += f' с меткой <b>{command_args}</b>'
+    else:
+        response += ' без метки'
+    await message.answer(response)
+
+
+
+
+@handlers_router.message(F.text.lower().contains('подписывайся'), IsAdmin(admins))
+async def process_find_word(message: Message):
+    await message.answer('О, админ, здарова! А тебе можно писать подписывайся.')
+
+
+@handlers_router.message(F.text.lower().contains('подписывайся'))
+async def process_find_word(message: Message):
+    await message.answer('В твоем сообщении было найдено слово "подписывайся", а у нас такое писать запрещено!')
