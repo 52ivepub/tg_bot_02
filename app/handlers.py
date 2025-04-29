@@ -1,6 +1,7 @@
 import asyncio
+import os
 from aiogram.filters import CommandObject, CommandStart, Command
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, FSInputFile
 from aiogram import F, Dispatcher, Router
 from aiogram.utils.chat_action import ChatActionSender
 import app.keyboards as kb
@@ -9,7 +10,8 @@ from aiogram.fsm.context import FSMContext
 from app.questions import questions
 from filters.is_admin import IsAdmin
 from config import bot, admins
-# from main import admins as ADMINS
+from config import all_media_dir
+
 
 
 
@@ -156,3 +158,25 @@ async def process_find_word(message: Message):
 @handlers_router.message(F.text.lower().contains('подписывайся'))
 async def process_find_word(message: Message):
     await message.answer('В твоем сообщении было найдено слово "подписывайся", а у нас такое писать запрещено!')
+
+
+@handlers_router.message(F.text.lower().contains('тэги'))
+async def process_find_word(message: Message):
+    await message.answer(
+                        "<b>Жирный</b>\n"
+                        "<i>Курсив</i>\n"
+                        "<u>Подчеркнутый</u>\n"
+                        "<s>Зачеркнутый</s>\n"
+                        "<tg-spoiler>Спойлер (скрытый текст)</tg-spoiler>\n"
+                        "<a href='http://www.example.com/'>Ссылка в тексте</a>\n"
+                        "<code>Код с копированием текста при клике</code>\n"
+                        "<pre>Спойлер с копированием текста</pre>\n"
+                        )
+
+
+
+@handlers_router.message(Command('send_audio'))
+async def cmd_start(message: Message, state: FSMContext):
+    audio_file = FSInputFile(path=os.path.join(all_media_dir, 'audio.mp3'), filename='1')
+    await message.answer_audio(audio=audio_file)
+

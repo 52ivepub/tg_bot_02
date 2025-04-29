@@ -1,8 +1,10 @@
 # Byte-compiled / optimized / DLL files
+.gitignore
 __pycache__/
 *.py[cod]
 *$py.class
 .gitignore
+Media
 # C extensions
 *.so
 config.py
