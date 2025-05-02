@@ -175,8 +175,60 @@ async def process_find_word(message: Message):
 
 
 
+# @handlers_router.message(Command('send_audio'))
+# async def cmd_start(message: Message, state: FSMContext):
+#     audio_file = FSInputFile(path=os.path.join(all_media_dir, 'audio.mp3'), filename='1')
+#     await message.answer_audio(audio=audio_file)
+
+
 @handlers_router.message(Command('send_audio'))
 async def cmd_start(message: Message, state: FSMContext):
-    audio_file = FSInputFile(path=os.path.join(all_media_dir, 'audio.mp3'), filename='1')
-    await message.answer_audio(audio=audio_file)
+    audio_file = FSInputFile(path=os.path.join(all_media_dir, 'audio.mp3'))
+    msg_id = await message.answer_audio(audio=audio_file, reply_markup=kb.main_kb(message.from_user.id),
+                                        caption='Моя <u>отформатированная</u> подпись к <b>файлу</b>')
+    print(msg_id.audio.file_id)
 
+    # 'CQACAgIAAxkDAAIBrWgUFvZyI7yjFwbF7u7goYyglU4xAAIPZQACoDChSMBTqKlDUqwtNgQ'
+
+
+@handlers_router.message(Command('send_audio_2'))
+async def cmd_start(message: Message, state: FSMContext):
+    # audio_file = FSInputFile(path=os.path.join(all_media_dir, 'new_message_tone.mp3'))
+    audio_id = 'CQACAgIAAxkDAAIBrWgUFvZyI7yjFwbF7u7goYyglU4xAAIPZQACoDChSMBTqKlDUqwtNgQ'
+    msg_id = await message.answer_audio(audio=audio_id, reply_markup=kb.main_kb(message.from_user.id),
+                                        caption='Моя <u>отформатированная</u> подпись к <b>файлу</b>')
+    
+
+@handlers_router.message(Command('send_photo'))
+async def cmd_start(message: Message, state: FSMContext):
+    photo_file = FSInputFile(path=os.path.join(all_media_dir, 'image.jpg'))
+    msg_id = await message.answer_photo(photo=photo_file, reply_markup=kb.main_kb(message.from_user.id),
+                                        caption='Моя <u>отформатированная</u> подпись к <b>фото</b>')
+    print(msg_id.photo[-1].file_id)
+
+
+@handlers_router.message(Command('link_photo'))
+async def cmd_start(message: Message, state: FSMContext):
+    photo_url = 'https://indirimlerce.com/wp-content/uploads/2023/02/phyton-ile-neler-yapilabilir.jpg'
+    msg_id = await message.answer_photo(photo=photo_url, reply_markup=kb.main_kb(message.from_user.id),
+                                        caption='Моя <u>отформатированная</u> подпись к <b>фото</b>')
+    print(msg_id.photo[-1].file_id)
+
+
+@handlers_router.message(Command('send_video'))
+async def cmd_start(message: Message, state: FSMContext):
+    video_file = FSInputFile(path=os.path.join(all_media_dir, 'video.mp4'))
+    msg = await message.answer_video(video=video_file, reply_markup=kb.main_kb(message.from_user.id),
+                                     caption='Моя отформатированная подпись к файлу')
+    await asyncio.sleep(2)
+    await message.answer_video(video=msg.video.file_id, caption='Новое описание к тому же видосу',
+                               reply_markup=kb.main_kb(message.from_user.id))
+    await msg.delete()
+
+
+@handlers_router.message(Command('send_voice'))
+async def cmd_start(message: Message, state: FSMContext):
+    async with ChatActionSender.record_voice(bot=bot, chat_id=message.from_user.id):
+        await asyncio.sleep(3)
+        await message.answer_voice(voice=FSInputFile(
+            path=os.path.join(all_media_dir, 'audio.mp3')))

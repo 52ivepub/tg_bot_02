@@ -8,6 +8,7 @@ from aiogram.types import (
     )
 from faker import Faker
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from config import admins
 
 
 
@@ -20,6 +21,16 @@ main = ReplyKeyboardMarkup(keyboard=[
     input_field_placeholder='Выберете пункт меню', 
     one_time_keyboard=True)
 
+
+def main_kb(user_telegram_id: int):
+    kb_list = [
+        [KeyboardButton(text="📖 О нас"), KeyboardButton(text="👤 Профиль")],
+        [KeyboardButton(text="📝 Заполнить анкету"), KeyboardButton(text="📚 Каталог")]
+    ]
+    if user_telegram_id in admins:
+        kb_list.append([KeyboardButton(text="⚙️ Админ панель")])
+    keyboard = ReplyKeyboardMarkup(keyboard=kb_list, resize_keyboard=True, one_time_keyboard=True)
+    return keyboard
 
 # settings = InlineKeyboardMarkup(inline_keyboard=[
 #     [InlineKeyboardButton(text='Наш сайт', 
