@@ -6,16 +6,23 @@ from dotenv import find_dotenv, load_dotenv
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram import F
 from sqlalchemy import BigInteger, Integer, String
-from app.handlers import handlers_router
+from app.handlers import handlers_router, questionnaire_router
 import os
 from asyncpg_lite import DatabaseManager
 import asyncio
+from aiogram.fsm.storage.redis import RedisStorage
+
+
+
 
 from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 
 pg_link = os.getenv('DB_URL')
+
+redis_url = os.getenv("REDIS_URL")
+storage = RedisStorage.from_url(redis_url)
 
 
 # from  app.keyboards import set_commands
@@ -25,9 +32,10 @@ load_dotenv(find_dotenv())
 admins = [int(admin_id) for admin_id in os.getenv('ADMINS').split(',')]
 
 bot = Bot(token=os.getenv("TOKEN"), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-dp = Dispatcher()
+dp = Dispatcher(storage=storage)
 
 dp.include_routers(handlers_router)
+dp.include_routers(questionnaire_router)
 
 async def set_commands():
     commands = [BotCommand(command='start', description='Старт'),
@@ -51,3 +59,9 @@ if __name__ == "__main__":
     except Exception as e:
         print('Bot sleep')
         print(e)
+
+
+
+
+
+
